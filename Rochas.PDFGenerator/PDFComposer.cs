@@ -40,14 +40,14 @@ namespace Rochas.PDFGenerator
             }
         }
 
-        public void AddTextLine(string text, FontConfig fontConfig)
+        public void AddTextLine(string text, LineConfig lineConfig)
         {
             if (!string.IsNullOrWhiteSpace(text))
             {
                 if (_textList == null)
                     _textList = new List<PDFTextLine>();
 
-                _textList.Add(new PDFTextLine(text, fontConfig));
+                _textList.Add(new PDFTextLine(text, lineConfig));
             }
         }
 
@@ -76,11 +76,13 @@ namespace Rochas.PDFGenerator
                     foreach (var textLine in _textList)
                     {
                         Paragraph paragraph = null;
-                        if (textLine.FontConfig == null)
+                        if (textLine.LineConfig == null)
                             paragraph = new Paragraph(textLine.Text);
                         else
-                            paragraph = new Paragraph(textLine.Text, textLine.FontConfig.GetFontConfiguration());
-                        
+                            paragraph = new Paragraph(textLine.Text, textLine.LineConfig.GetFontConfiguration());
+
+                        paragraph.Alignment = (int)textLine.LineConfig.TextAlignment;
+
                         pdfDocument.Add(paragraph);
                     }
 

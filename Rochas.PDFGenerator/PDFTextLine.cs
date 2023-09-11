@@ -6,13 +6,13 @@ namespace Rochas.PDFGenerator
 {
     internal class PDFTextLine
     {
-        public PDFTextLine(string text, FontConfig fontConfig = null)
+        public PDFTextLine(string text, LineConfig fontConfig = null)
         {
             Text = text;
-            FontConfig = fontConfig;
+            LineConfig = fontConfig;
         }
 
         public string Text { get; set; }
-        public FontConfig? FontConfig { get; set; }
+        public LineConfig? LineConfig { get; set; }
     }
 }

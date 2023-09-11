@@ -3,10 +3,11 @@ using System.Drawing;
 using iTextSharp.text;
 using iTextSharp.text.pdf;
 using Rochas.PDFGenerator.Constants;
+using Rochas.PDFGenerator.Enumerators;
 
 namespace Rochas.PDFGenerator
 {
-    public class FontConfig
+    public class LineConfig
     {
         public string FontName { get; set; }
         public Color FontColor { get; set; }
@@ -15,6 +16,8 @@ namespace Rochas.PDFGenerator
         public bool IsItalic { get; set; }
 
         public bool IsUnderlined { get; set; }
+
+        public TextAlignEnum TextAlignment { get; set; }
 
         internal Font GetFontConfiguration()
         {

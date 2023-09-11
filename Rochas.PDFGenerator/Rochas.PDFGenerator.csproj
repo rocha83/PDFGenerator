@@ -10,9 +10,8 @@
 		<RepositoryUrl>https://github.com/rocha83/PDFGenerator</RepositoryUrl>
 		<PackageProjectUrl>https://github.com/rocha83/PDFGenerator</PackageProjectUrl>
 		<PackageTags>PDF generator converter composer html datatable</PackageTags>
-		<Version>1.0.2</Version>
+		<Version>1.0.3</Version>
 		<Description>A iTextSharp based PDF generator</Description>
-		<AssemblyVersion>1.0.0</AssemblyVersion>
 		<PackageLicenseFile>GNUv2_License.txt</PackageLicenseFile>
 		<PackageIcon>pdf-logo.jpg</PackageIcon>
 	</PropertyGroup>
