@@ -9,15 +9,102 @@
 		<RepositoryType>Git</RepositoryType>
 		<RepositoryUrl>https://github.com/rocha83/PDFGenerator</RepositoryUrl>
 		<PackageProjectUrl>https://github.com/rocha83/PDFGenerator</PackageProjectUrl>
-		<PackageTags>PDF generator converter composer html datatable</PackageTags>
-		<Version>1.0.3</Version>
-		<Description>A iTextSharp based PDF generator</Description>
+		<PackageTags>PDF generic generator custom template content composer</PackageTags>
+		<Version>1.1.0</Version>
+		<Description>A QuestPDF based PDF generator</Description>
 		<PackageLicenseFile>GNUv2_License.txt</PackageLicenseFile>
 		<PackageIcon>pdf-logo.jpg</PackageIcon>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="iTextSharp.LGPLv2.Core" Version="3.4.5" />
+	  <None Remove="Resources\Fonts\ComicNeue\ComicNeue-Bold.ttf" />
+	  <None Remove="Resources\Fonts\ComicNeue\ComicNeue-BoldItalic.ttf" />
+	  <None Remove="Resources\Fonts\ComicNeue\ComicNeue-Italic.ttf" />
+	  <None Remove="Resources\Fonts\ComicNeue\ComicNeue-Regular.ttf" />
+	  <None Remove="Resources\Fonts\JetBrainsMono\JetbrainsMonoBold.ttf" />
+	  <None Remove="Resources\Fonts\JetBrainsMono\JetbrainsMonoBoldItalic.ttf" />
+	  <None Remove="Resources\Fonts\JetBrainsMono\JetbrainsMonoItalic.ttf" />
+	  <None Remove="Resources\Fonts\JetBrainsMono\JetbrainsMonoRegular.ttf" />
+	  <None Remove="Resources\Fonts\LiberationSans\LiberationSans-Bold.ttf" />
+	  <None Remove="Resources\Fonts\LiberationSans\LiberationSans-BoldItalic.ttf" />
+	  <None Remove="Resources\Fonts\LiberationSans\LiberationSans-Italic.ttf" />
+	  <None Remove="Resources\Fonts\LiberationSans\LiberationSans-Regular.ttf" />
+	  <None Remove="Resources\Fonts\LiberationSerif\LiberationSerif-Bold.ttf" />
+	  <None Remove="Resources\Fonts\LiberationSerif\LiberationSerif-BoldItalic.ttf" />
+	  <None Remove="Resources\Fonts\LiberationSerif\LiberationSerif-Italic.ttf" />
+	  <None Remove="Resources\Fonts\LiberationSerif\LiberationSerif-Regular.ttf" />
+	  <None Remove="Resources\Fonts\Montserrat\Montserrat-Bold.ttf" />
+	  <None Remove="Resources\Fonts\Montserrat\Montserrat-BoldItalic.ttf" />
+	  <None Remove="Resources\Fonts\Montserrat\Montserrat-Italic.ttf" />
+	  <None Remove="Resources\Fonts\Montserrat\Montserrat-Regular.ttf" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <EmbeddedResource Include="Resources\Fonts\ComicNeue\ComicNeue-Bold.ttf">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </EmbeddedResource>
+	  <EmbeddedResource Include="Resources\Fonts\ComicNeue\ComicNeue-BoldItalic.ttf">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </EmbeddedResource>
+	  <EmbeddedResource Include="Resources\Fonts\ComicNeue\ComicNeue-Italic.ttf">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </EmbeddedResource>
+	  <EmbeddedResource Include="Resources\Fonts\ComicNeue\ComicNeue-Regular.ttf">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </EmbeddedResource>
+	  <EmbeddedResource Include="Resources\Fonts\JetBrainsMono\JetbrainsMonoBold.ttf">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </EmbeddedResource>
+	  <EmbeddedResource Include="Resources\Fonts\JetBrainsMono\JetbrainsMonoBoldItalic.ttf">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </EmbeddedResource>
+	  <EmbeddedResource Include="Resources\Fonts\JetBrainsMono\JetbrainsMonoItalic.ttf">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </EmbeddedResource>
+	  <EmbeddedResource Include="Resources\Fonts\JetBrainsMono\JetbrainsMonoRegular.ttf">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </EmbeddedResource>
+	  <EmbeddedResource Include="Resources\Fonts\LiberationSans\LiberationSans-Bold.ttf">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </EmbeddedResource>
+	  <EmbeddedResource Include="Resources\Fonts\LiberationSans\LiberationSans-BoldItalic.ttf">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </EmbeddedResource>
+	  <EmbeddedResource Include="Resources\Fonts\LiberationSans\LiberationSans-Italic.ttf">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </EmbeddedResource>
+	  <EmbeddedResource Include="Resources\Fonts\LiberationSans\LiberationSans-Regular.ttf">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </EmbeddedResource>
+	  <EmbeddedResource Include="Resources\Fonts\LiberationSerif\LiberationSerif-Bold.ttf">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </EmbeddedResource>
+	  <EmbeddedResource Include="Resources\Fonts\LiberationSerif\LiberationSerif-BoldItalic.ttf">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </EmbeddedResource>
+	  <EmbeddedResource Include="Resources\Fonts\LiberationSerif\LiberationSerif-Italic.ttf">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </EmbeddedResource>
+	  <EmbeddedResource Include="Resources\Fonts\LiberationSerif\LiberationSerif-Regular.ttf">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </EmbeddedResource>
+	  <EmbeddedResource Include="Resources\Fonts\Montserrat\Montserrat-Bold.ttf">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </EmbeddedResource>
+	  <EmbeddedResource Include="Resources\Fonts\Montserrat\Montserrat-BoldItalic.ttf">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </EmbeddedResource>
+	  <EmbeddedResource Include="Resources\Fonts\Montserrat\Montserrat-Italic.ttf">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </EmbeddedResource>
+	  <EmbeddedResource Include="Resources\Fonts\Montserrat\Montserrat-Regular.ttf">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </EmbeddedResource>
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="QuestPDF" Version="2025.7.4" />
+		<PackageReference Include="Rochas.ImageGenerator" Version="1.1.0" />
 	</ItemGroup>
 
 	<ItemGroup>
