@@ -7,3 +7,5 @@
 /Rochas.PDFGenerator/obj
 /.vs/ProjectEvaluation
 /Rochas.PDFGenerator/bin/Debug
+/Rochas.PDFTests/bin
+/Rochas.PDFTests/obj
