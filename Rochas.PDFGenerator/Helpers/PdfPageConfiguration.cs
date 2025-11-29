@@ -3,7 +3,7 @@ using Rochas.PDFGenerator.Enumerators;
 
 namespace Rochas.PDFGenerator.Helpers
 {
-    public class PdfPageConfig
+    public class PdfPageConfiguration
     {
         public float MarginLeft { get; set; } = 30;
         public float MarginRight { get; set; } = 30;
@@ -16,6 +16,8 @@ namespace Rochas.PDFGenerator.Helpers
         public PdfFontFamily FontFamily { get; set; } = PdfFontFamily.LiberationSans;
         public byte[]? CustomFontBytes { get; set; }
 
-        public HeaderComposition Header { get; set; } = new HeaderComposition();
+        public bool FooterPagination { get; set; } = true;
+
+        public PdfHeaderComposition HeaderComposition { get; set; } = new PdfHeaderComposition();
     }
 }

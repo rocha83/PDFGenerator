@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Reflection;
+using System.Xml.Linq;
 
 public class PDFComposer
 {
@@ -17,46 +18,54 @@ public class PDFComposer
     private readonly string _metaSubject;
     private readonly DateTime _metaCreated;
 
+    public PDFComposer()
+    {
+        _metaAuthor = "Rochas PDF User";
+        _metaTitle = "New Document";
+        _metaSubject = "Unknown";
+        _metaCreated = DateTime.Now;
+    }
+
     public PDFComposer(string author, string title,
-                       string subject, DateTime creationDate)
+                       string subject, DateTime? creationDate)
     {
         _metaAuthor = author ?? "";
         _metaTitle = title ?? "";
         _metaSubject = subject ?? "";
-        _metaCreated = creationDate;
+        _metaCreated = creationDate ?? DateTime.Now;
     }
 
     public byte[] GeneratePdf(
-        string template,
-        Dictionary<PdfBodyPlaceHolder, string> placeholders,
-        PdfPageConfig config)
+        string template, Dictionary<PdfBodyPlaceHolder, string> placeholders, PdfPageConfiguration pageConfig)
     {
-        RegisterFonts(config);
+        RegisterFonts(pageConfig);
         
-        return BuildPdf(template, placeholders, config);
+        return BuildPdf(template, placeholders, pageConfig);
     }
 
-    public byte[] GeneratePdf<T>(string template, T model, PdfPageConfig config, PdfPlaceHolderStyle defaultStyle = null)
+    public byte[] GeneratePdf<T>(string template, T model, PdfPageConfiguration pageConfig, PdfPlaceHolderStyle defaultStyle = null)
     {
-        RegisterFonts(config);
+        RegisterFonts(pageConfig);
 
         // map model -> placeholders using defaultStyle
         var placeholders = MapFromModel(model, defaultStyle);
         
-        return BuildPdf(template, placeholders, config);
+        return BuildPdf(template, placeholders, pageConfig);
     }
 
-    public byte[] GeneratePdf(DataTable table, PdfPageConfig config, PdfPlaceHolderStyle defaultStyle = null)
+    public byte[] GeneratePdf(DataTable table, PdfPageConfiguration pageConfig, PdfPlaceHolderStyle defaultStyle = null)
     {
-        RegisterFonts(config);
+        RegisterFonts(pageConfig);
 
         var placeholders = MapFromDataTable(table, defaultStyle);
 
         // Template será construído dinamicamente
         string template = BuildTemplateFromDataTable(table);
 
-        return BuildPdf(template, placeholders, config);
+        return BuildPdf(template, placeholders, pageConfig);
     }
+
+    // Private Methods
 
     private Dictionary<PdfBodyPlaceHolder, string> MapFromModel<T>(T model, PdfPlaceHolderStyle defaultStyle = null)
     {
@@ -153,14 +162,12 @@ public class PDFComposer
         return sb.ToString();
     }
 
-    // Private Methods
-
-    private byte[] BuildPdf(string template, Dictionary<PdfBodyPlaceHolder, string> placeholders, PdfPageConfig config)
+    private byte[] BuildPdf(string template, Dictionary<PdfBodyPlaceHolder, string> placeholders, PdfPageConfiguration pageConfig)
     {
         var document = new PdfInlineDocument(
             template,
             placeholders,
-            config,
+            pageConfig,
             _metaAuthor,
             _metaTitle,
             _metaSubject,
@@ -170,7 +177,7 @@ public class PDFComposer
         return document.GeneratePdf();
     }
 
-    private void RegisterFonts(PdfPageConfig config)
+    private void RegisterFonts(PdfPageConfiguration config)
     {
         QuestPDF.Settings.License = LicenseType.Community;
 
@@ -203,6 +210,7 @@ public class PDFComposer
                     FontManager.RegisterFont(new FileStream("Fonts/Montserrat-Regular.ttf", FileMode.Open));
                     FontManager.RegisterFont(new FileStream("Fonts/Montserrat-Bold.ttf", FileMode.Open));
                     FontManager.RegisterFont(new FileStream("Fonts/Montserrat-Italic.ttf", FileMode.Open));
+                    FontManager.RegisterFont(new FileStream("Fonts/Montserrat-BoldItalic.ttf", FileMode.Open));
                     break;
 
                 case PdfFontFamily.LiberationSerif:

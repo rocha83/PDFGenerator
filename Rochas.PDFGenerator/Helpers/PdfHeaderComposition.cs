@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Rochas.PDFGenerator.Helpers
 {
-    public class HeaderComposition
+    public class PdfHeaderComposition
     {
         public byte[]? LogoBytes { get; set; }
         public PdfLogoAlignment LogoAlign { get; set; } = PdfLogoAlignment.Left;

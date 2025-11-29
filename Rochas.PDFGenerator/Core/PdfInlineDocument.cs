@@ -1,16 +1,11 @@
 ﻿using QuestPDF.Fluent;
-using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
-using Rochas.ImageGenerator.Enumerators;
-using Rochas.ImageGenerator.Filters;
-using Rochas.PDFGenerator.Enumerators;
 using Rochas.PDFGenerator.Helpers;
 using System;
 using System.Linq;
 using System.Text;
 using System.Collections.Generic;
 using System.Security.Cryptography;
-using System.Text.RegularExpressions;
 
 namespace Rochas.PDFGenerator.Core
 {
@@ -18,22 +13,24 @@ namespace Rochas.PDFGenerator.Core
     {
         private readonly string _template;
         private readonly Dictionary<PdfBodyPlaceHolder, string> _placeholders;
-        private readonly PdfPageConfig _config;
+        private readonly PdfPageConfiguration _config;
 
         private readonly string _metaAuthor;
         private readonly string _metaTitle;
         private readonly string _metaSubject;
         private readonly DateTime _created;
 
-        private readonly Regex _tokenRegex = new Regex(@"\{\{.*?\}\}", RegexOptions.Compiled);
+        private readonly PdfBodyStyler _styler;
 
         public PdfInlineDocument(
-            string template, Dictionary<PdfBodyPlaceHolder, string> placeholders, PdfPageConfig config,
+            string template, Dictionary<PdfBodyPlaceHolder, string> placeholders, PdfPageConfiguration pageConfig,
             string author, string title, string subject, DateTime created)
         {
+            _styler = new PdfBodyStyler(pageConfig);
+
             _template = template ?? "";
             _placeholders = placeholders ?? new Dictionary<PdfBodyPlaceHolder, string>();
-            _config = config;
+            _config = pageConfig;
 
             _metaAuthor = author ?? "";
             _metaTitle = title ?? "";
@@ -74,16 +71,40 @@ namespace Rochas.PDFGenerator.Core
                 page.MarginTop(_config.MarginTop);
                 page.MarginBottom(_config.MarginBottom);
 
-                page.Header().Element(h => ComposeHeader(h));
+                page.Header().Element(h => _styler.ComposeHeader(h));
+
+                page.Footer().Element(f =>
+                {
+                    if (_config.FooterPagination)
+                    {
+                        f.AlignCenter().Text(txt =>
+                        {
+                            txt.DefaultTextStyle(s => s.FontSize(10));
+
+                            txt.Span("Página ");
+                            txt.CurrentPageNumber();
+
+                            txt.Element(e =>
+                            {
+                                e.ShowIf(ctx => ctx.TotalPages > 1)
+                                .PaddingVertical(-2).Text(t =>
+                                 {
+                                     t.Span(" de ");
+                                     t.TotalPages();
+                                 });
+                            });
+                        });
+                    }
+                });
 
                 if (_config.WatermarkBytes != null)
-                    ApplyWatermark(page);
+                    _styler.ApplyWatermark(page);
 
                 page.Content().Padding(10).Element(c =>
                 {
                     c.Text(text =>
                     {
-                        var parts = Tokenize(_template);
+                        var parts = _styler.Tokenize(_template);
 
                         foreach (var part in parts)
                         {
@@ -107,7 +128,7 @@ namespace Rochas.PDFGenerator.Core
                                 }
 
                                 var span = text.Span(value);
-                                ApplyStyleToSpan(span, style, _config);
+                                _styler.ApplyStyleToSpan(span, style, _config);
                             }
                             else
                             {
@@ -117,152 +138,6 @@ namespace Rochas.PDFGenerator.Core
                     });
                 });
             });
-        }
-
-        private List<PdfTokenPart> Tokenize(string template)
-        {
-            var result = new List<PdfTokenPart>();
-            int lastIndex = 0;
-
-            foreach (Match m in _tokenRegex.Matches(template))
-            {
-                if (m.Index > lastIndex)
-                    result.Add(new PdfTokenPart { IsPlaceholder = false, Text = template.Substring(lastIndex, m.Index - lastIndex) });
-
-                result.Add(new PdfTokenPart { IsPlaceholder = true, Token = m.Value });
-                lastIndex = m.Index + m.Length;
-            }
-
-            if (lastIndex < template.Length)
-                result.Add(new PdfTokenPart { IsPlaceholder = false, Text = template.Substring(lastIndex) });
-
-            return result;
-        }
-
-        private void ApplyWatermark(PageDescriptor page)
-        {
-            if (_config.WatermarkBytes == null)
-                return;
-
-            using var imageFilter = new ImageFilter(ImageFormatEnum.Jpg);
-
-            byte[] wmBytes = imageFilter.AjustOpacity(
-                _config.WatermarkBytes,
-                _config.WatermarkOpacity
-            );
-
-            page.Background()
-                .AlignCenter()
-                .AlignMiddle()
-                .Image(wmBytes)
-                .FitArea();
-        }
-
-        private void ComposeHeader(IContainer h)
-        {
-            var header = _config.Header;
-            bool hasLogo = header.LogoBytes != null && header.LogoBytes.Length > 0;
-            bool hasTitle = !string.IsNullOrWhiteSpace(header.Title);
-
-            if (!hasLogo && !hasTitle)
-                return;
-
-            h.Row(row =>
-            {
-                if (!hasTitle && hasLogo)
-                {
-                    row.RelativeItem().AlignCenter().Image(header.LogoBytes).FitArea();
-                    return;
-                }
-
-                if (!hasLogo && hasTitle)
-                {
-                    var textDesc = row.RelativeItem().AlignCenter()
-                        .Text(header.Title)
-                        .FontSize(header.TitleStyle.FontSizePx ?? 20);
-
-                    if (header.TitleStyle.Bold)
-                        textDesc.Bold();
-                    else
-                        textDesc.NormalWeight();
-
-                    return;
-                }
-
-                if (header.LogoAlign == PdfLogoAlignment.Left)
-                {
-                    row.RelativeItem(3).AlignLeft().Image(header.LogoBytes).FitArea();
-
-                    var textDesc = row.RelativeItem(9).AlignRight()
-                                      .Text(header.Title)
-                                      .FontSize(header.TitleStyle.FontSizePx ?? 20);
-
-                    if (header.TitleStyle.Bold)
-                        textDesc.Bold();
-                    else
-                        textDesc.NormalWeight();
-                }
-                else
-                {
-                    var textDesc = row.RelativeItem(9).AlignLeft()
-                                      .Text(header.Title)
-                                      .FontSize(header.TitleStyle.FontSizePx ?? 20);
-
-                    if (header.TitleStyle.Bold)
-                        textDesc.Bold();
-                    else
-                        textDesc.NormalWeight();
-
-                    row.RelativeItem(3).AlignRight().Image(header.LogoBytes).FitArea();
-                }
-            });
-
-            h.PaddingVertical(10).LineHorizontal(1).LineColor("black");
-        }
-
-        private string ResolveColorHex(PdfPlaceHolderStyle style)
-        {
-            if (style.TextColor == PdfTextColor.CustomHex &&
-                !string.IsNullOrWhiteSpace(style.CustomTextColor))
-                return style.CustomTextColor;
-
-            return style.TextColor switch
-            {
-                PdfTextColor.White => Colors.White,
-                PdfTextColor.Gray => Colors.Grey.Medium,
-                PdfTextColor.LightGray => Colors.Grey.Lighten3,
-                PdfTextColor.DarkGray => Colors.Grey.Darken4,
-                PdfTextColor.Blue => Colors.Blue.Medium,
-                PdfTextColor.DarkBlue => Colors.Blue.Darken4,
-                PdfTextColor.Green => Colors.Green.Medium,
-                PdfTextColor.DarkGreen => Colors.Green.Darken4,
-                PdfTextColor.Red => Colors.Red.Medium,
-                PdfTextColor.DarkRed => Colors.Red.Darken4,
-                PdfTextColor.Yellow => Colors.Yellow.Medium,
-                PdfTextColor.Orange => Colors.Orange.Medium,
-                PdfTextColor.Brown => Colors.Brown.Medium,
-                PdfTextColor.Cyan => Colors.Cyan.Medium,
-
-                _ => Colors.Black,
-            };
-        }
-
-        private void ApplyStyleToSpan(TextSpanDescriptor span, PdfPlaceHolderStyle style, PdfPageConfig cfg)
-        {
-            span.FontSize(style.FontSizePx ?? 12);
-
-            if (style.Bold) span.Bold();
-            if (style.Italic) span.Italic();
-            if (style.Underline) span.Underline();
-
-            var hex = ResolveColorHex(style);
-            span.FontColor(hex);
-
-            if (!string.IsNullOrWhiteSpace(style.CustomFontFamily))
-            {
-                try { span.FontFamily(style.CustomFontFamily); }
-                catch { }
-            }
-        }
+        }   
     }
 }
