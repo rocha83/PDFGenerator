@@ -2,20 +2,20 @@
 
 [![NuGet](https://img.shields.io/nuget/v/Rochas.PDFGenerator.svg)](https://www.nuget.org/packages/Rochas.PDFGenerator)
 
-.NET library for generating PDFs from **templates**, **models (T)**, or **DataTables**, with full support for **headers with logos**, **footer pagination**, **font styles and colors**, **watermarks**, and highly customizable placeholders.
-Based on *QuestPDF* and compatible with **.NET Standard 2.1+**.
+Biblioteca .NET para geração de PDFs a partir de **templates**, **modelos (T)** ou **DataTables**, com suporte completo a **cabeçalhos com logotipo**, **paginação no rodapé**, **estilos e cores de fontes**, **marca-d’água** e placeholders altamente customizáveis.  
+Baseada em *QuestPDF* e compatível com **.NET Standard 2.1+**.
 
 ---
 
-## 📦 Setup
+## 📦 Instalação
 
-Via .NET CLI:
+Via CLI do .NET:
 
 ```bash
 dotnet add package Rochas.PDFGenerator
 ```
 
-Or via Package Manager Console:
+Ou via Package Manager Console:
 
 ```powershell
 Install-Package Rochas.PDFGenerator
@@ -23,7 +23,7 @@ Install-Package Rochas.PDFGenerator
 
 ---
 
-Main namespace:
+Namespace principal:
 
 ```csharp
 using Rochas.PDFGenerator;
@@ -31,22 +31,25 @@ using Rochas.PDFGenerator;
 
 ## 🚀 Visão Geral
 
-The main class is:
+A classe principal é:
 
 ```csharp
 PDFComposer
 ```
 
-It offers 3 PDF generation modes:
+Ela oferece 3 modos de geração de PDF:
 
-Template + Placeholders — replaces keys ({{Name}}, {{Date}}) with individual styles.
-Generic Model (T) — the object is automatically mapped to placeholders corresponding to the property names and default style.
-DataTable — generates tabular PDF with headers/rows automatically within the specified default style.
-All modes can use headers, footers with pagination, custom fonts, logos, watermarks, custom margins, individual styles, etc.
+Template + Placeholders — substituição de chaves ({{Nome}}, {{Data}}) com estilos individuais.
 
-## ⚙️ Page Configuration
+Model Genérico (T) — o objeto é mapeado automaticamente para placeholders correspondentes aos nomes das propriedades e estilo padrão.
 
-The PdfPageConfiguration class centralizes the settings:
+DataTable — gera PDF tabular com cabeçalhos/linhas automaticamente dentro do estilo padrão informado.
+
+Todos os modos podem usar cabeçalho, rodapé com paginação, fontes personalizadas, logo, marca-d’água, margens customizadas, estilos individuais, etc.
+
+## ⚙️ Configuração da Página
+
+A classe PdfPageConfiguration centraliza as configurações:
 
 ```csharp
 var pageConfig = new PdfPageConfiguration {
@@ -72,9 +75,9 @@ var pageConfig = new PdfPageConfiguration {
 };
 ```
 
-## 🎨 Placeholder Styles
+## 🎨 Estilos dos Placeholders
 
-Each placeholder in the body can have its own style via PdfPlaceHolderStyle:
+Cada placeholder no corpo pode ter estilo próprio via PdfPlaceHolderStyle:
 
 ```csharp
 new PdfPlaceHolderStyle {
@@ -86,13 +89,13 @@ new PdfPlaceHolderStyle {
 }
 ```
 
-The keys are represented by:
+As chaves são representadas por:
 
 ```csharp
 PdfBodyPlaceHolder { Key = "{{Nome}}", Style = ... }
 ```
 
-## 📄 Mode 1 — Template + Placeholders (more flexible use)
+## 📄 Modo 1 — Template + Placeholders (uso mais flexível)
 Template (string):
 
 ```text
@@ -109,9 +112,9 @@ var placeholders = new Dictionary<PdfBodyPlaceHolder, string>() {
 byte[] pdf = composer.GeneratePdf(templateString, placeholders, pageConfig);
 ```
 
-## 📦 Mode 2 — Generic Model (T)
+## 📦 Modo 2 — Model Genérico (T)
 
-Sample class:
+Exemplo de classe:
 
 ```csharp
 public class Cliente {
@@ -127,7 +130,7 @@ Cliente: {{Nome}}
 Documento: {{Documento}}
 ```
 
-Use:
+Uso:
 
 ```csharp
 var cliente = new Cliente {
@@ -138,7 +141,7 @@ var cliente = new Cliente {
 byte[] pdf = composer.GeneratePdf(templateString, cliente, pageConfig);
 ```
 
-## 📊 Mode 3 — DataTable
+## 📊 Modo 3 — DataTable
 
 ```csharp
 DataTable table = new DataTable();
@@ -151,7 +154,7 @@ table.Rows.Add("Lápis", 20);
 byte[] pdf = composer.GeneratePdf(table, pageConfig);
 ```
 
-## 🧪 Complete Sample
+## 🧪 Exemplo Completo
 
 ```csharp
 var composer = new PDFComposer(
@@ -185,14 +188,14 @@ byte[] pdf = composer.GeneratePdf(template, cliente, pageConfig);
 File.WriteAllBytes("Clientes.pdf", pdf);
 ```
 
-## 🛠 ASP.NET Core Integration
+## 🛠 Integração via ASP.NET Core
 
-Response sample from an API:
+Exemplo de retorno em API:
 
 ```csharp
 return File(pdfBytes, "application/pdf", "relatorio.pdf");
 ```
 
-## 📄 License
+## 📄 Licença
 
-MIT — free for commercial and personal use.
+MIT — livre para uso comercial e pessoal.
