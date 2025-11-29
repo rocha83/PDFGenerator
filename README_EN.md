@@ -198,4 +198,4 @@ return File(pdfBytes, "application/pdf", "relatorio.pdf");
 
 ## 📄 License
 
-MIT — free for commercial and personal use.
+GPL v2 — free for commercial and personal use.
