@@ -9,8 +9,8 @@
 		<RepositoryType>Git</RepositoryType>
 		<RepositoryUrl>https://github.com/rocha83/PDFGenerator</RepositoryUrl>
 		<PackageProjectUrl>https://github.com/rocha83/PDFGenerator</PackageProjectUrl>
-		<PackageTags>PDF generic generator custom template content composer</PackageTags>
-		<Version>1.1.0</Version>
+		<PackageTags>PDF document generic generator custom template content composer</PackageTags>
+		<Version>1.1.2</Version>
 		<Description>A QuestPDF based PDF generator</Description>
 		<PackageLicenseFile>GNUv2_License.txt</PackageLicenseFile>
 		<PackageIcon>pdf-logo.jpg</PackageIcon>
@@ -37,6 +37,7 @@
 	  <None Remove="Resources\Fonts\Montserrat\Montserrat-BoldItalic.ttf" />
 	  <None Remove="Resources\Fonts\Montserrat\Montserrat-Italic.ttf" />
 	  <None Remove="Resources\Fonts\Montserrat\Montserrat-Regular.ttf" />
+	  <None Remove="Resources\Images\dummy.png" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -100,11 +101,14 @@
 	  <EmbeddedResource Include="Resources\Fonts\Montserrat\Montserrat-Regular.ttf">
 	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	  </EmbeddedResource>
+	  <EmbeddedResource Include="Resources\Images\dummy.png">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </EmbeddedResource>
 	</ItemGroup>
 
 	<ItemGroup>
 		<PackageReference Include="QuestPDF" Version="2025.7.4" />
-		<PackageReference Include="Rochas.ImageGenerator" Version="1.1.0" />
+		<PackageReference Include="Rochas.ImageGenerator" Version="1.1.2" />
 	</ItemGroup>
 
 	<ItemGroup>
