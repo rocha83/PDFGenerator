@@ -278,5 +278,42 @@ namespace Rochas.PDFTests
             Assert.NotNull(pdfData);
             Assert.True(pdfData.Length > 300);
         }
+        // --------------------------------------------------------------------
+        [Fact]
+        public void GeneratePdf_MultiColumnList_ShouldRenderThreeColumns()
+        {
+            var cfg = BaseConfig();
+            cfg.Columns = new PdfColumnConfig
+            {
+                Count = 3,
+                Ratios = new[] { 40f, 30f, 30f },
+                Gap = 8
+            };
+
+            var columns = new List<(string Template, Dictionary<PdfBodyPlaceHolder, string> Placeholders)>
+            {
+                ("Nome: {{Nome}}\nDoc: {{Doc}}", new Dictionary<PdfBodyPlaceHolder, string>
+                {
+                    { new PdfBodyPlaceHolder { Key = "{{Nome}}" }, "ACME Ltda." },
+                    { new PdfBodyPlaceHolder { Key = "{{Doc}}" }, "00.000.000/0001-00" }
+                }),
+                ("Data: {{Data}}\nPedido: {{Pedido}}", new Dictionary<PdfBodyPlaceHolder, string>
+                {
+                    { new PdfBodyPlaceHolder { Key = "{{Data}}" }, "07/08/2026" },
+                    { new PdfBodyPlaceHolder { Key = "{{Pedido}}" }, "PV-00015" }
+                }),
+                ("Total: {{Total}}\nStatus: {{Status}}", new Dictionary<PdfBodyPlaceHolder, string>
+                {
+                    { new PdfBodyPlaceHolder { Key = "{{Total}}" }, "R$ 1.500,00" },
+                    { new PdfBodyPlaceHolder { Key = "{{Status}}" }, "Faturado" }
+                })
+            };
+
+            byte[] pdfData = _composer.GeneratePdf(columns, cfg);
+            File.WriteAllBytes("Test_MC3.pdf", pdfData);
+
+            Assert.NotNull(pdfData);
+            Assert.True(pdfData.Length > 300);
+        }
     }
 }
