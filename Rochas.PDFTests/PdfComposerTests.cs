@@ -47,13 +47,13 @@ namespace Rochas.PDFTests
             Lorem ipsum dolor sit amet, consectetur adipiscing elit.
         ";
 
-            var ph = new Dictionary<PdfBodyPlaceHolder, string>
-        {
-            { new PdfBodyPlaceHolder { Key = "{{Nome}}", Style = new PdfPlaceHolderStyle { Bold = true } }, "Renato Rocha" },
-            { new PdfBodyPlaceHolder { Key = "{{Categoria}}", Style = new PdfPlaceHolderStyle { Italic = true } }, "Administrador" }
-        };
+            var placeholders = new Dictionary<PdfBodyPlaceHolder, string>
+            {
+                { new PdfBodyPlaceHolder { Key = "{{Nome}}", Style = new PdfPlaceHolderStyle { Bold = true } }, "Renato Rocha" },
+                { new PdfBodyPlaceHolder { Key = "{{Categoria}}", Style = new PdfPlaceHolderStyle { Italic = true } }, "Administrador" }
+            };
 
-            byte[] pdfData = _composer.GeneratePdf(template, ph, BaseConfig());
+            byte[] pdfData = _composer.GeneratePdf(template, placeholders, BaseConfig());
             File.WriteAllBytes("Test_RT.pdf", pdfData);
 
             Assert.NotNull(pdfData);
@@ -68,9 +68,9 @@ namespace Rochas.PDFTests
             var longText = new string('A', 8000);  // força várias páginas
             var template = "Conteúdo:\n" + longText;
 
-            var ph = new Dictionary<PdfBodyPlaceHolder, string>();
+            var placeholders = new Dictionary<PdfBodyPlaceHolder, string>();
 
-            var pdfData = _composer.GeneratePdf(template, ph, BaseConfig());
+            var pdfData = _composer.GeneratePdf(template, placeholders, BaseConfig());
             File.WriteAllBytes("Test_LB.pdf", pdfData);
 
             Assert.NotNull(pdfData);
@@ -81,18 +81,18 @@ namespace Rochas.PDFTests
         [Fact]
         public void GeneratePdf_WithHeaderAndWatermark_ShouldWorkTogether()
         {
-            var cfg = BaseConfig();
-            cfg.Header = new PdfHeaderConfig()
+            var config = BaseConfig();
+            config.Header = new PdfHeaderConfig()
             {
                 Title = "Relatório Integrado",
                 LogoBytes = DummyImage(),
                 TitleStyle = new PdfPlaceHolderStyle { Bold = true, FontSizePx = 22 }
             };
 
-            cfg.WatermarkBytes = DummyImage();
-            cfg.WatermarkOpacity = 30;
+            config.WatermarkBytes = DummyImage();
+            config.WatermarkOpacity = 30;
 
-            var pdfData = _composer.GeneratePdf("Corpo do documento...", new Dictionary<PdfBodyPlaceHolder, string>(), cfg);
+            var pdfData = _composer.GeneratePdf("Corpo do documento...", new Dictionary<PdfBodyPlaceHolder, string>(), config);
             File.WriteAllBytes("Test_LWM.pdf", pdfData);
 
             Assert.NotNull(pdfData);
@@ -135,18 +135,17 @@ namespace Rochas.PDFTests
         [Fact]
         public void GeneratePdf_WithDataTable_ShouldRenderTableCorrectly()
         {
-            // cria DataTable
-            var dt = new DataTable();
-            dt.Columns.Add("Nome");
-            dt.Columns.Add("Valor");
-            dt.Columns.Add("Ativo");
+            var dataTable = new DataTable();
+            dataTable.Columns.Add("Nome");
+            dataTable.Columns.Add("Valor");
+            dataTable.Columns.Add("Ativo");
 
-            dt.Rows.Add("Produto A", "10,90", "Sim");
-            dt.Rows.Add("Produto B", "8,50", "Não");
-            dt.Rows.Add("Produto C", "12,00", "Sim");
+            dataTable.Rows.Add("Produto A", "10,90", "Sim");
+            dataTable.Rows.Add("Produto B", "8,50", "Não");
+            dataTable.Rows.Add("Produto C", "12,00", "Sim");
 
-            var cfg = BaseConfig();
-            byte[] pdfData = _composer.GeneratePdf(dt, cfg);
+            var config = BaseConfig();
+            byte[] pdfData = _composer.GeneratePdf(dataTable, config);
             File.WriteAllBytes("Test_DT.pdf", pdfData);
 
             Assert.NotNull(pdfData);
@@ -158,17 +157,17 @@ namespace Rochas.PDFTests
         [Fact]
         public void GeneratePdf_WithStyledTable_ShouldRenderBorderedTable()
         {
-            var dt = new DataTable();
-            dt.Columns.Add("Produto");
-            dt.Columns.Add("Qtd");
-            dt.Columns.Add("Valor");
+            var dataTable = new DataTable();
+            dataTable.Columns.Add("Produto");
+            dataTable.Columns.Add("Qtd");
+            dataTable.Columns.Add("Valor");
 
-            dt.Rows.Add("Notebook", 2, "R$ 12.000,00");
-            dt.Rows.Add("Mouse", 10, "R$ 250,00");
-            dt.Rows.Add("Teclado", 5, "R$ 750,00");
+            dataTable.Rows.Add("Notebook", 2, "R$ 12.000,00");
+            dataTable.Rows.Add("Mouse", 10, "R$ 250,00");
+            dataTable.Rows.Add("Teclado", 5, "R$ 750,00");
 
-            var cfg = BaseConfig();
-            cfg.Table = new PdfTableConfig
+            var config = BaseConfig();
+            config.Table = new PdfTableConfig
             {
                 Style = PdfTableStyle.Bordered,
                 HeaderColor = "#1E3A5F",
@@ -176,7 +175,7 @@ namespace Rochas.PDFTests
                 AlternatingRowColor = "#F0F4F8"
             };
 
-            byte[] pdfData = _composer.GeneratePdf(dt, cfg);
+            byte[] pdfData = _composer.GeneratePdf(dataTable, config);
             File.WriteAllBytes("Test_ST.pdf", pdfData);
 
             Assert.NotNull(pdfData);
@@ -187,30 +186,30 @@ namespace Rochas.PDFTests
         [Fact]
         public void GeneratePdf_MultiColumn_ShouldRenderTwoColumns()
         {
-            var cfg = BaseConfig();
-            cfg.Columns = new PdfColumnConfig
+            var config = BaseConfig();
+            config.Columns = new PdfColumnConfig
             {
                 Count = 2,
                 Ratios = new[] { 60f, 40f },
                 Gap = 10
             };
 
-            var leftPh = new Dictionary<PdfBodyPlaceHolder, string>
+            var leftPlaceholders = new Dictionary<PdfBodyPlaceHolder, string>
             {
                 { new PdfBodyPlaceHolder { Key = "{{Nome}}" }, "ACME Ltda." },
                 { new PdfBodyPlaceHolder { Key = "{{Doc}}" }, "00.000.000/0001-00" }
             };
 
-            var rightPh = new Dictionary<PdfBodyPlaceHolder, string>
+            var rightPlaceholders = new Dictionary<PdfBodyPlaceHolder, string>
             {
                 { new PdfBodyPlaceHolder { Key = "{{Data}}" }, "07/08/2026" },
                 { new PdfBodyPlaceHolder { Key = "{{Total}}" }, "R$ 1.500,00" }
             };
 
             byte[] pdfData = _composer.GeneratePdf(
-                "Nome: {{Nome}}\nDoc: {{Doc}}", leftPh,
-                "Data: {{Data}}\nTotal: {{Total}}", rightPh,
-                cfg);
+                "Nome: {{Nome}}\nDoc: {{Doc}}", leftPlaceholders,
+                "Data: {{Data}}\nTotal: {{Total}}", rightPlaceholders,
+                config);
 
             File.WriteAllBytes("Test_MC.pdf", pdfData);
 
@@ -222,15 +221,15 @@ namespace Rochas.PDFTests
         [Fact]
         public void GeneratePdf_TableWithModelHeader_ShouldMergeBoth()
         {
-            var dt = new DataTable();
-            dt.Columns.Add("Produto");
-            dt.Columns.Add("Qtd");
-            dt.Columns.Add("Valor");
+            var dataTable = new DataTable();
+            dataTable.Columns.Add("Produto");
+            dataTable.Columns.Add("Qtd");
+            dataTable.Columns.Add("Valor");
 
-            dt.Rows.Add("Notebook", 1, "R$ 8.500,00");
-            dt.Rows.Add("Mouse", 3, "R$ 360,00");
+            dataTable.Rows.Add("Notebook", 1, "R$ 8.500,00");
+            dataTable.Rows.Add("Mouse", 3, "R$ 360,00");
 
-            var header = new
+            var headerModel = new
             {
                 Cliente = "ACME Ltda.",
                 CNPJ = "00.000.000/0001-00",
@@ -243,9 +242,9 @@ namespace Rochas.PDFTests
                 HeaderColor = "#1E3A5F"
             };
 
-            var cfg = BaseConfig();
+            var config = BaseConfig();
 
-            byte[] pdfData = _composer.GeneratePdf(dt, header, tableConfig, cfg);
+            byte[] pdfData = _composer.GeneratePdf(dataTable, headerModel, tableConfig, config);
             File.WriteAllBytes("Test_TH.pdf", pdfData);
 
             Assert.NotNull(pdfData);
@@ -256,8 +255,7 @@ namespace Rochas.PDFTests
         [Fact]
         public void GeneratePdf_BackwardCompat_OldConfigStillWorks()
         {
-            // Test that PdfPageConfiguration (alias) still works
-            var cfg = new PdfPageConfiguration
+            var oldConfig = new PdfPageConfiguration
             {
                 MarginBottom = 20,
                 MarginTop = 20,
@@ -271,7 +269,7 @@ namespace Rochas.PDFTests
             };
 
             var pdfData = _composer.GeneratePdf("Corpo do documento...",
-                new Dictionary<PdfBodyPlaceHolder, string>(), cfg);
+                new Dictionary<PdfBodyPlaceHolder, string>(), oldConfig);
 
             File.WriteAllBytes("Test_COMPAT.pdf", pdfData);
 
@@ -282,8 +280,8 @@ namespace Rochas.PDFTests
         [Fact]
         public void GeneratePdf_MultiColumnList_ShouldRenderThreeColumns()
         {
-            var cfg = BaseConfig();
-            cfg.Columns = new PdfColumnConfig
+            var config = BaseConfig();
+            config.Columns = new PdfColumnConfig
             {
                 Count = 3,
                 Ratios = new[] { 40f, 30f, 30f },
@@ -309,7 +307,7 @@ namespace Rochas.PDFTests
                 })
             };
 
-            byte[] pdfData = _composer.GeneratePdf(columns, cfg);
+            byte[] pdfData = _composer.GeneratePdf(columns, config);
             File.WriteAllBytes("Test_MC3.pdf", pdfData);
 
             Assert.NotNull(pdfData);
