@@ -10,7 +10,7 @@
 		<RepositoryUrl>https://github.com/rocha83/PDFGenerator</RepositoryUrl>
 		<PackageProjectUrl>https://github.com/rocha83/PDFGenerator</PackageProjectUrl>
 		<PackageTags>PDF document generic generator custom template content composer</PackageTags>
-		<Version>1.1.2</Version>
+		<Version>1.2.0</Version>
 		<Description>A QuestPDF based PDF generator</Description>
 		<PackageLicenseFile>GNUv2_License.txt</PackageLicenseFile>
 		<PackageIcon>pdf-logo.jpg</PackageIcon>
@@ -107,7 +107,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="QuestPDF" Version="2025.7.4" />
+		<PackageReference Include="QuestPDF" Version="2026.7.2" />
 		<PackageReference Include="Rochas.ImageGenerator" Version="1.1.2" />
 	</ItemGroup>
 

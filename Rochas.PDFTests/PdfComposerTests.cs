@@ -17,15 +17,15 @@ namespace Rochas.PDFTests
             return File.ReadAllBytes("Resources/Images/dummy.png");
         }
 
-        private PdfPageConfiguration BaseConfig() =>
-            new PdfPageConfiguration
+        private PdfConfig BaseConfig() =>
+            new PdfConfig
             {
                 MarginBottom = 20,
                 MarginTop = 20,
                 MarginLeft = 20,
                 MarginRight = 20,
                 FontFamily = PdfFontFamily.LiberationSans,
-                HeaderComposition = new PdfHeaderComposition(),
+                Header = new PdfHeaderConfig(),
                 WatermarkOpacity = 50
             };
 
@@ -34,16 +34,16 @@ namespace Rochas.PDFTests
         public void GeneratePdf_WithRichText_ShouldGenerateValidPdf()
         {
             var template = @"
-            Relat�rio Completo
+            Relatório Completo
 
             Nome: {{Nome}}
             Categoria: {{Categoria}}
-            Observa��es:
+            Observações:
             - Teste 1
             - Teste 2
             - Teste 3
 
-            Texto adicional grande para validar m�ltiplas linhas e quebra autom�tica.
+            Texto adicional grande para validar múltiplas linhas e quebra automática.
             Lorem ipsum dolor sit amet, consectetur adipiscing elit.
         ";
 
@@ -65,8 +65,8 @@ namespace Rochas.PDFTests
         [Fact]
         public void GeneratePdf_LongBody_ShouldPaginateCorrectly()
         {
-            var longText = new string('A', 8000);  // for�a v�rias p�ginas
-            var template = "Conte�do:\n" + longText;
+            var longText = new string('A', 8000);  // força várias páginas
+            var template = "Conteúdo:\n" + longText;
 
             var ph = new Dictionary<PdfBodyPlaceHolder, string>();
 
@@ -82,9 +82,9 @@ namespace Rochas.PDFTests
         public void GeneratePdf_WithHeaderAndWatermark_ShouldWorkTogether()
         {
             var cfg = BaseConfig();
-            cfg.HeaderComposition = new PdfHeaderComposition()
+            cfg.Header = new PdfHeaderConfig()
             {
-                Title = "Relat�rio Integrado",
+                Title = "Relatório Integrado",
                 LogoBytes = DummyImage(),
                 TitleStyle = new PdfPlaceHolderStyle { Bold = true, FontSizePx = 22 }
             };
@@ -104,7 +104,7 @@ namespace Rochas.PDFTests
         public void GeneratePdf_FromModel_ShouldRenderAllTokens()
         {
             var template = @"
-            Usu�rio: {{Name}}
+            Usuário: {{Name}}
             Idade: {{Age}}
             Saldo: {{Balance}}
             Status: {{Status}}";
@@ -142,7 +142,7 @@ namespace Rochas.PDFTests
             dt.Columns.Add("Ativo");
 
             dt.Rows.Add("Produto A", "10,90", "Sim");
-            dt.Rows.Add("Produto B", "8,50", "N�o");
+            dt.Rows.Add("Produto B", "8,50", "Não");
             dt.Rows.Add("Produto C", "12,00", "Sim");
 
             var cfg = BaseConfig();
@@ -151,6 +151,132 @@ namespace Rochas.PDFTests
 
             Assert.NotNull(pdfData);
             Assert.True(pdfData.Length > 500);
+        }
+
+        // ── NEW TESTS ──────────────────────────────────────────────────
+
+        [Fact]
+        public void GeneratePdf_WithStyledTable_ShouldRenderBorderedTable()
+        {
+            var dt = new DataTable();
+            dt.Columns.Add("Produto");
+            dt.Columns.Add("Qtd");
+            dt.Columns.Add("Valor");
+
+            dt.Rows.Add("Notebook", 2, "R$ 12.000,00");
+            dt.Rows.Add("Mouse", 10, "R$ 250,00");
+            dt.Rows.Add("Teclado", 5, "R$ 750,00");
+
+            var cfg = BaseConfig();
+            cfg.Table = new PdfTableConfig
+            {
+                Style = PdfTableStyle.Bordered,
+                HeaderColor = "#1E3A5F",
+                HeaderTextBold = true,
+                AlternatingRowColor = "#F0F4F8"
+            };
+
+            byte[] pdfData = _composer.GeneratePdf(dt, cfg);
+            File.WriteAllBytes("Test_ST.pdf", pdfData);
+
+            Assert.NotNull(pdfData);
+            Assert.True(pdfData.Length > 500);
+        }
+
+        // --------------------------------------------------------------------
+        [Fact]
+        public void GeneratePdf_MultiColumn_ShouldRenderTwoColumns()
+        {
+            var cfg = BaseConfig();
+            cfg.Columns = new PdfColumnConfig
+            {
+                Count = 2,
+                Ratios = new[] { 60f, 40f },
+                Gap = 10
+            };
+
+            var leftPh = new Dictionary<PdfBodyPlaceHolder, string>
+            {
+                { new PdfBodyPlaceHolder { Key = "{{Nome}}" }, "ACME Ltda." },
+                { new PdfBodyPlaceHolder { Key = "{{Doc}}" }, "00.000.000/0001-00" }
+            };
+
+            var rightPh = new Dictionary<PdfBodyPlaceHolder, string>
+            {
+                { new PdfBodyPlaceHolder { Key = "{{Data}}" }, "07/08/2026" },
+                { new PdfBodyPlaceHolder { Key = "{{Total}}" }, "R$ 1.500,00" }
+            };
+
+            byte[] pdfData = _composer.GeneratePdf(
+                "Nome: {{Nome}}\nDoc: {{Doc}}", leftPh,
+                "Data: {{Data}}\nTotal: {{Total}}", rightPh,
+                cfg);
+
+            File.WriteAllBytes("Test_MC.pdf", pdfData);
+
+            Assert.NotNull(pdfData);
+            Assert.True(pdfData.Length > 300);
+        }
+
+        // --------------------------------------------------------------------
+        [Fact]
+        public void GeneratePdf_TableWithModelHeader_ShouldMergeBoth()
+        {
+            var dt = new DataTable();
+            dt.Columns.Add("Produto");
+            dt.Columns.Add("Qtd");
+            dt.Columns.Add("Valor");
+
+            dt.Rows.Add("Notebook", 1, "R$ 8.500,00");
+            dt.Rows.Add("Mouse", 3, "R$ 360,00");
+
+            var header = new
+            {
+                Cliente = "ACME Ltda.",
+                CNPJ = "00.000.000/0001-00",
+                Data = "07/08/2026"
+            };
+
+            var tableConfig = new PdfTableConfig
+            {
+                Style = PdfTableStyle.Bordered,
+                HeaderColor = "#1E3A5F"
+            };
+
+            var cfg = BaseConfig();
+
+            byte[] pdfData = _composer.GeneratePdf(dt, header, tableConfig, cfg);
+            File.WriteAllBytes("Test_TH.pdf", pdfData);
+
+            Assert.NotNull(pdfData);
+            Assert.True(pdfData.Length > 500);
+        }
+
+        // --------------------------------------------------------------------
+        [Fact]
+        public void GeneratePdf_BackwardCompat_OldConfigStillWorks()
+        {
+            // Test that PdfPageConfiguration (alias) still works
+            var cfg = new PdfPageConfiguration
+            {
+                MarginBottom = 20,
+                MarginTop = 20,
+                MarginLeft = 20,
+                MarginRight = 20,
+                FontFamily = PdfFontFamily.LiberationSans,
+                Header = new PdfHeaderConfig
+                {
+                    Title = "Teste Compatibilidade"
+                }
+            };
+
+            var pdfData = _composer.GeneratePdf("Corpo do documento...",
+                new Dictionary<PdfBodyPlaceHolder, string>(), cfg);
+
+            File.WriteAllBytes("Test_COMPAT.pdf", pdfData);
+
+            Assert.NotNull(pdfData);
+            Assert.True(pdfData.Length > 300);
         }
     }
 }

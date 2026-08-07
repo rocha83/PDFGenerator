@@ -13,10 +13,10 @@ namespace Rochas.PDFGenerator.Helpers
 {
     internal class PdfBodyStyler
     {
-        private readonly PdfPageConfiguration _pageConfig;
+        private readonly PdfConfig _pageConfig;
         private readonly Regex _tokenRegex = new Regex(@"\{\{.*?\}\}", RegexOptions.Compiled);
 
-        public PdfBodyStyler(PdfPageConfiguration pageConfig)
+        public PdfBodyStyler(PdfConfig pageConfig)
         {
             _pageConfig = pageConfig;
         }
@@ -62,7 +62,7 @@ namespace Rochas.PDFGenerator.Helpers
 
         public void ComposeHeader(IContainer h)
         {
-            var header = _pageConfig.HeaderComposition;
+            var header = _pageConfig.Header;
             bool hasLogo = header.LogoBytes != null && header.LogoBytes.Length > 0;
             bool hasTitle = !string.IsNullOrWhiteSpace(header.Title);
 
@@ -147,7 +147,39 @@ namespace Rochas.PDFGenerator.Helpers
             };
         }
 
-        public void ApplyStyleToSpan(TextSpanDescriptor span, PdfPlaceHolderStyle style, PdfPageConfiguration cfg)
+        public string ResolveRawColorHex(string hexOrName)
+        {
+            if (string.IsNullOrWhiteSpace(hexOrName))
+                return Colors.Black;
+
+            if (hexOrName.StartsWith("#"))
+                return hexOrName;
+
+            switch (hexOrName.ToLower())
+            {
+                case "black": return Colors.Black;
+                case "white": return Colors.White;
+                case "gray":
+                case "grey": return Colors.Grey.Medium;
+                case "lightgray":
+                case "lightgrey": return Colors.Grey.Lighten3;
+                case "darkgray":
+                case "darkgrey": return Colors.Grey.Darken4;
+                case "blue": return Colors.Blue.Medium;
+                case "darkblue": return Colors.Blue.Darken4;
+                case "green": return Colors.Green.Medium;
+                case "darkgreen": return Colors.Green.Darken4;
+                case "red": return Colors.Red.Medium;
+                case "darkred": return Colors.Red.Darken4;
+                case "yellow": return Colors.Yellow.Medium;
+                case "orange": return Colors.Orange.Medium;
+                case "brown": return Colors.Brown.Medium;
+                case "cyan": return Colors.Cyan.Medium;
+                default: return Colors.Black;
+            }
+        }
+
+        public void ApplyStyleToSpan(TextSpanDescriptor span, PdfPlaceHolderStyle style, PdfConfig cfg)
         {
             span.FontSize(style.FontSizePx ?? 12);
 

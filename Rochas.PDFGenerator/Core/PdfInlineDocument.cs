@@ -13,7 +13,7 @@ namespace Rochas.PDFGenerator.Core
     {
         private readonly string _template;
         private readonly Dictionary<PdfBodyPlaceHolder, string> _placeholders;
-        private readonly PdfPageConfiguration _config;
+        private readonly PdfConfig _config;
 
         private readonly string _metaAuthor;
         private readonly string _metaTitle;
@@ -23,14 +23,14 @@ namespace Rochas.PDFGenerator.Core
         private readonly PdfBodyStyler _styler;
 
         public PdfInlineDocument(
-            string template, Dictionary<PdfBodyPlaceHolder, string> placeholders, PdfPageConfiguration pageConfig,
+            string template, Dictionary<PdfBodyPlaceHolder, string> placeholders, PdfConfig config,
             string author, string title, string subject, DateTime created)
         {
-            _styler = new PdfBodyStyler(pageConfig);
+            _styler = new PdfBodyStyler(config);
 
             _template = template ?? "";
             _placeholders = placeholders ?? new Dictionary<PdfBodyPlaceHolder, string>();
-            _config = pageConfig;
+            _config = config;
 
             _metaAuthor = author ?? "";
             _metaTitle = title ?? "";
