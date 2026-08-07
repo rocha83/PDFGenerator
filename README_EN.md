@@ -2,198 +2,258 @@
 
 [![NuGet](https://img.shields.io/nuget/v/Rochas.PDFGenerator.svg)](https://www.nuget.org/packages/Rochas.PDFGenerator)
 
-.NET library for generating PDFs from **templates**, **models (T)**, or **DataTables**, with full support for **headers with logos**, **footer pagination**, **font styles and colors**, **watermarks**, and highly customizable placeholders.
+.NET library for generating PDFs from **templates**, **models (T)**, or **DataTables**, with full support for **headers with logos**, **footer pagination**, **font styles and colors**, **watermarks**, **styled tables**, **multi-column layouts**, and highly customizable placeholders.
 Based on *QuestPDF* and compatible with **.NET Standard 2.1+**.
 
 ---
 
 ## 📦 Setup
 
-Via .NET CLI:
-
 ```bash
 dotnet add package Rochas.PDFGenerator
 ```
 
-Or via Package Manager Console:
+---
 
-```powershell
-Install-Package Rochas.PDFGenerator
-```
+## 🚀 Overview
+
+The main class is `PDFComposer`, offering **7 PDF generation modes**:
+
+| Mode | Description |
+|------|-------------|
+| **Template + Placeholders** | Replace keys `{{Name}}` with individual styles |
+| **Generic Model (T)** | Object automatically mapped to placeholders |
+| **DataTable** | Tabular PDF with headers/rows |
+| **Multi-Column** | Two templates side by side with configurable ratios |
+| **Multi-Column List** | N columns via template list |
+| **Styled Table** | DataTable with borders, alternating rows, custom header |
+| **Table + Model Header** | Object header + item table |
 
 ---
 
-Main namespace:
+## ⚙️ Configuration (PdfConfig)
+
+The `PdfConfig` class centralizes all settings:
 
 ```csharp
-using Rochas.PDFGenerator;
-```
-
-## 🚀 Visão Geral
-
-The main class is:
-
-```csharp
-PDFComposer
-```
-
-It offers 3 PDF generation modes:
-
-Template + Placeholders — replaces keys ({{Name}}, {{Date}}) with individual styles.
-
-Generic Model (T) — the object is automatically mapped to placeholders corresponding to the property names and default style.
-
-DataTable — generates tabular PDF with headers/rows automatically within the specified default style.
-
-All modes can use headers, footers with pagination, custom fonts, logos, watermarks, custom margins, individual styles, etc.
-
-## ⚙️ Page Configuration
-
-The PdfPageConfiguration class centralizes the settings:
-
-```csharp
-var pageConfig = new PdfPageConfiguration {
+var config = new PdfConfig
+{
     MarginLeft = 40,
     MarginRight = 40,
     MarginTop = 50,
     MarginBottom = 50,
 
     FontFamily = PdfFontFamily.Montserrat,
-    // Opcional: fonte TTF customizada
-    CustomFontBytes = File.ReadAllBytes("origem/sua-fonte.ttf"),
+    CustomFontBytes = File.ReadAllBytes("fonts/Montserrat-Regular.ttf"),
 
-    HeaderComposition = new PdfHeaderComposition {
+    Header = new PdfHeaderConfig
+    {
         LogoBytes = File.ReadAllBytes("images/logo.png"),
         LogoAlign = PdfLogoAlignment.Left,
-        Title = "Relatório XYZ"
+        Title = "Report Title"
     },
 
     WatermarkBytes = File.ReadAllBytes("images/watermark.png"),
     WatermarkOpacity = 30,
+    FooterPagination = true,
 
-    FooterPagination = true
+    // Table mode (optional)
+    Table = new PdfTableConfig
+    {
+        Style = PdfTableStyle.Bordered,
+        HeaderColor = "#1E3A5F",
+        AlternatingRowColor = "#F0F4F8"
+    },
+
+    // Column mode (optional)
+    Columns = new PdfColumnConfig
+    {
+        Count = 2,
+        Ratios = new[] { 60f, 40f },
+        Gap = 10
+    }
 };
 ```
 
-## 🎨 Placeholder Styles
+> **Backward compatible:** `PdfPageConfiguration` and `PdfHeaderComposition` still work as aliases.
 
-Each placeholder in the body can have its own style via PdfPlaceHolderStyle:
+---
 
-```csharp
-new PdfPlaceHolderStyle {
-    Bold = true,
-    Italic = true,
-    Underline = true,
-    FontSizePx = 16,
-    TextColor = Color.DarkBlue
-}
-```
-
-The keys are represented by:
+## 📄 Mode 1 — Template + Placeholders
 
 ```csharp
-PdfBodyPlaceHolder { Key = "{{Nome}}", Style = ... }
-```
+var template = "Client: {{Name}}\nDate: {{Date}}";
 
-## 📄 Mode 1 — Template + Placeholders (more flexible use)
-Template (string):
-
-```text
-Cliente: {{NomeCliente}}
-Data do Relatório: {{Data}}
-```
-
-```csharp
-var placeholders = new Dictionary<PdfBodyPlaceHolder, string>() {
-    { new PdfBodyPlaceHolder { Key = "{{NomeCliente}}", Style = new PdfPlaceHolderStyle { Bold = true, FontSizePx = 16 } }, "ACME Ltda"  },
-    { new PdfBodyPlaceHolder { Key = "{{Data}}", Style = new PdfPlaceHolderStyle { Italic = true } }, DateTime.Now.ToString("dd/MM/yyyy") }
+var placeholders = new Dictionary<PdfBodyPlaceHolder, string>
+{
+    { new PdfBodyPlaceHolder { Key = "{{Name}}", Style = new PdfPlaceHolderStyle { Bold = true, FontSizePx = 16 } }, "ACME Ltd" },
+    { new PdfBodyPlaceHolder { Key = "{{Date}}", Style = new PdfPlaceHolderStyle { Italic = true } }, DateTime.Now.ToString("dd/MM/yyyy") }
 };
 
-byte[] pdf = composer.GeneratePdf(templateString, placeholders, pageConfig);
+byte[] pdf = composer.GeneratePdf(template, placeholders, config);
 ```
 
 ## 📦 Mode 2 — Generic Model (T)
 
-Sample class:
-
 ```csharp
-public class Cliente {
-    public string Nome { get; set; }
-    public string Documento { get; set; }
-}
-```
+var client = new { Name = "ACME Ltd", Document = "00.000.000/0001-00" };
 
-Template:
-
-```text
-Cliente: {{Nome}}
-Documento: {{Documento}}
-```
-
-Use:
-
-```csharp
-var cliente = new Cliente {
-    Nome = "ACME Ltda.",
-    Documento = "00.000.000/0001-00"
-};
-
-byte[] pdf = composer.GeneratePdf(templateString, cliente, pageConfig);
+byte[] pdf = composer.GeneratePdf("Client: {{Name}}\nDoc: {{Document}}", client, config);
 ```
 
 ## 📊 Mode 3 — DataTable
 
 ```csharp
 DataTable table = new DataTable();
-table.Columns.Add("Produto");
-table.Columns.Add("Quantidade");
+table.Columns.Add("Product");
+table.Columns.Add("Quantity");
+table.Rows.Add("Notebook", 10);
 
-table.Rows.Add("Caderno", 10);
-table.Rows.Add("Lápis", 20);
-
-byte[] pdf = composer.GeneratePdf(table, pageConfig);
+byte[] pdf = composer.GeneratePdf(table, config);
 ```
+
+## 📐 Mode 4 — Multi-Column (2 columns)
+
+```csharp
+config.Columns = new PdfColumnConfig { Count = 2, Ratios = new[] { 60f, 40f }, Gap = 10 };
+
+var leftPlaceholders = new Dictionary<PdfBodyPlaceHolder, string>
+{
+    { new PdfBodyPlaceHolder { Key = "{{Name}}" }, "ACME Ltd" },
+    { new PdfBodyPlaceHolder { Key = "{{Doc}}" }, "00.000.000/0001-00" }
+};
+
+var rightPlaceholders = new Dictionary<PdfBodyPlaceHolder, string>
+{
+    { new PdfBodyPlaceHolder { Key = "{{Date}}" }, "08/07/2026" },
+    { new PdfBodyPlaceHolder { Key = "{{Total}}" }, "$1,500.00" }
+};
+
+byte[] pdf = composer.GeneratePdf(
+    "Name: {{Name}}\nDoc: {{Doc}}", leftPlaceholders,
+    "Date: {{Date}}\nTotal: {{Total}}", rightPlaceholders,
+    config);
+```
+
+## 📐 Mode 5 — Multi-Column List (N columns)
+
+```csharp
+var columns = new List<(string Template, Dictionary<PdfBodyPlaceHolder, string> Placeholders)>
+{
+    ("Name: {{Name}}\nDoc: {{Doc}}", leftPlaceholders),
+    ("Date: {{Date}}\nOrder: {{Order}}", centerPlaceholders),
+    ("Total: {{Total}}\nStatus: {{Status}}", rightPlaceholders)
+};
+
+byte[] pdf = composer.GeneratePdf(columns, config);
+```
+
+## 📋 Mode 6 — Styled Table
+
+```csharp
+config.Table = new PdfTableConfig
+{
+    Style = PdfTableStyle.Bordered,
+    HeaderColor = "#1E3A5F",
+    HeaderTextBold = true,
+    AlternatingRowColor = "#F0F4F8",
+    FontSize = 10,
+    RowPadding = 5
+};
+
+DataTable table = new DataTable();
+table.Columns.Add("Product");
+table.Columns.Add("Qty");
+table.Columns.Add("Value");
+table.Rows.Add("Notebook", 2, "$12,000.00");
+
+byte[] pdf = composer.GeneratePdf(table, config);
+```
+
+## 📋 Mode 7 — Table + Model Header
+
+```csharp
+var headerModel = new { Client = "ACME Ltd", CNPJ = "00.000.000/0001-00", Date = "08/07/2026" };
+
+var tableConfig = new PdfTableConfig
+{
+    Style = PdfTableStyle.Bordered,
+    HeaderColor = "#1E3A5F"
+};
+
+byte[] pdf = composer.GeneratePdf(table, headerModel, tableConfig, config);
+```
+
+---
+
+## 📋 PdfTableConfig — Table Styles
+
+```csharp
+new PdfTableConfig
+{
+    Style = PdfTableStyle.Bordered,    // Bordered | Striped | Minimal | Grid
+    HeaderColor = "#1E3A5F",
+    HeaderTextBold = true,
+    HeaderFontSize = 10,
+    AlternatingRowColor = "#F0F4F8",
+    FontSize = 10,
+    RowPadding = 5,
+    ShowBorders = true,
+    BorderColor = "#CCCCCC"
+};
+```
+
+## 📐 PdfColumnConfig — Columns
+
+```csharp
+new PdfColumnConfig
+{
+    Count = 2,                    // Number of columns
+    Ratios = new[] { 60f, 40f }, // Ratios (null = equal auto-fit)
+    Gap = 10,                     // Space between columns
+    DividerStyle = PdfColumnDividerStyle.None
+};
+```
+
+---
 
 ## 🧪 Complete Sample
 
 ```csharp
 var composer = new PDFComposer(
-    author: "Sistema XYZ",
-    title: "Relatório de Clientes",
-    subject: "Clientes Ativos",
+    author: "XYZ System",
+    title: "Client Report",
+    subject: "Active Clients",
     creationDate: DateTime.Now
 );
 
-var pageConfig = new PdfPageConfiguration {
+var config = new PdfConfig
+{
     FontFamily = PdfFontFamily.Montserrat,
-    CustomFontBytes = File.ReadAllBytes("fonts/Montserrat-Regular.ttf"),
-
-    HeaderComposition = new PdfHeaderComposition {
+    Header = new PdfHeaderConfig
+    {
         LogoBytes = File.ReadAllBytes("logo.png"),
         LogoAlign = PdfLogoAlignment.Left,
-        Title = "Relatório de Clientes"
+        Title = "Client Report"
     },
-
     WatermarkBytes = File.ReadAllBytes("watermark.png"),
     WatermarkOpacity = 20,
-    FooterPagination = true
+    FooterPagination = true,
+    Table = new PdfTableConfig
+    {
+        Style = PdfTableStyle.Bordered,
+        HeaderColor = "#1E3A5F"
+    }
 };
 
-var template = "Cliente: {{Nome}}\nDocumento: {{Documento}}";
-
-var cliente = new Cliente { Nome = "ACME Ltda.", Documento = "00.000.000/0001-00" };
-
-byte[] pdf = composer.GeneratePdf(template, cliente, pageConfig);
-
-File.WriteAllBytes("Clientes.pdf", pdf);
+byte[] pdf = composer.GeneratePdf(table, config);
+File.WriteAllBytes("Clients.pdf", pdf);
 ```
 
 ## 🛠 ASP.NET Core Integration
 
-Response sample from an API:
-
 ```csharp
-return File(pdfBytes, "application/pdf", "relatorio.pdf");
+return File(pdfBytes, "application/pdf", "report.pdf");
 ```
 
 ## 📄 License
