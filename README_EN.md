@@ -209,11 +209,16 @@ new PdfTableConfig
 new PdfColumnConfig
 {
     Count = 2,                    // Number of columns
-    Ratios = new[] { 60f, 40f }, // Ratios (null = equal auto-fit)
+    Ratios = new[] { 60f, 40f }, // Proportional ratios (only used in Proportional mode; null = equal split)
     Gap = 10,                     // Space between columns
-    DividerStyle = PdfColumnDividerStyle.None
+    DividerStyle = PdfColumnDividerStyle.None,
+    FitMode = PdfColumnFitMode.Proportional // Proportional (default) | AutoFit
 };
 ```
+
+**FitMode behavior:**
+- `Proportional` (default) — columns fill the available width proportionally (`Ratios`, or equal split when null). Text wraps inside each column.
+- `AutoFit` — columns are sized to their content (true content auto-fit). If the combined content is wider than the page, the document automatically falls back to proportional sizing instead of throwing.
 
 ---
 

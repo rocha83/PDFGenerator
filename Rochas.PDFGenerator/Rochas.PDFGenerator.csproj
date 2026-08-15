@@ -10,10 +10,11 @@
 		<RepositoryUrl>https://github.com/rocha83/PDFGenerator</RepositoryUrl>
 		<PackageProjectUrl>https://github.com/rocha83/PDFGenerator</PackageProjectUrl>
 		<PackageTags>PDF document generic generator custom template content composer</PackageTags>
-		<Version>1.2.0</Version>
+		<Version>1.3.0</Version>
 		<Description>A QuestPDF based PDF generator</Description>
 		<PackageLicenseFile>GNUv2_License.txt</PackageLicenseFile>
 		<PackageIcon>pdf-logo.jpg</PackageIcon>
+		<PackageReleaseNotes>v1.3.0 - Auto-fit columns support (PdfColumnFitMode.AutoFit); fallback to proportional sizing when content exceeds page width.</PackageReleaseNotes>
 	</PropertyGroup>
 
 	<ItemGroup>

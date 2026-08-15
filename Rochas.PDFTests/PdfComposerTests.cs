@@ -313,5 +313,133 @@ namespace Rochas.PDFTests
             Assert.NotNull(pdfData);
             Assert.True(pdfData.Length > 300);
         }
+
+        // --------------------------------------------------------------------
+        [Fact]
+        public void GeneratePdf_MultiColumn_AutoFit_ShouldRenderValidPdf()
+        {
+            var config = BaseConfig();
+            config.Columns = new PdfColumnConfig
+            {
+                Count = 2,
+                FitMode = PdfColumnFitMode.AutoFit,
+                Gap = 10
+            };
+
+            var columns = new List<(string Template, Dictionary<PdfBodyPlaceHolder, string> Placeholders)>
+            {
+                ("Nome: {{Nome}}\nDoc: {{Doc}}", new Dictionary<PdfBodyPlaceHolder, string>
+                {
+                    { new PdfBodyPlaceHolder { Key = "{{Nome}}" }, "ACME Ltda." },
+                    { new PdfBodyPlaceHolder { Key = "{{Doc}}" }, "00.000.000/0001-00" }
+                }),
+                ("Data: {{Data}}\nTotal: {{Total}}", new Dictionary<PdfBodyPlaceHolder, string>
+                {
+                    { new PdfBodyPlaceHolder { Key = "{{Data}}" }, "07/08/2026" },
+                    { new PdfBodyPlaceHolder { Key = "{{Total}}" }, "R$ 1.500,00" }
+                })
+            };
+
+            byte[] pdfData = _composer.GeneratePdf(columns, config);
+            File.WriteAllBytes("Test_MC_AF.pdf", pdfData);
+
+            Assert.NotNull(pdfData);
+            Assert.True(pdfData.Length > 300);
+            Assert.StartsWith("%PDF", System.Text.Encoding.ASCII.GetString(pdfData)[..4]);
+        }
+
+        // --------------------------------------------------------------------
+        [Fact]
+        public void GeneratePdf_MultiColumn_AutoFit_ThreeColumns_ShouldRenderValidPdf()
+        {
+            var config = BaseConfig();
+            config.Columns = new PdfColumnConfig
+            {
+                Count = 3,
+                FitMode = PdfColumnFitMode.AutoFit,
+                Gap = 8
+            };
+
+            var columns = new List<(string Template, Dictionary<PdfBodyPlaceHolder, string> Placeholders)>
+            {
+                ("C1: {{Short}}", new Dictionary<PdfBodyPlaceHolder, string>
+                {
+                    { new PdfBodyPlaceHolder { Key = "{{Short}}" }, "X" }
+                }),
+                ("C2: {{Long}}", new Dictionary<PdfBodyPlaceHolder, string>
+                {
+                    { new PdfBodyPlaceHolder { Key = "{{Long}}" }, new string('W', 200) }
+                }),
+                ("C3: {{Medium}}", new Dictionary<PdfBodyPlaceHolder, string>
+                {
+                    { new PdfBodyPlaceHolder { Key = "{{Medium}}" }, "Texto de largura média" }
+                })
+            };
+
+            byte[] pdfData = _composer.GeneratePdf(columns, config);
+            File.WriteAllBytes("Test_MC3_AF.pdf", pdfData);
+
+            Assert.NotNull(pdfData);
+            Assert.True(pdfData.Length > 300);
+        }
+
+        // --------------------------------------------------------------------
+        [Fact]
+        public void GeneratePdf_MultiColumn_AutoFit_WithRatios_ShouldStillRender()
+        {
+            var config = BaseConfig();
+            config.Columns = new PdfColumnConfig
+            {
+                Count = 2,
+                FitMode = PdfColumnFitMode.AutoFit,
+                Ratios = new[] { 70f, 30f },
+                Gap = 10
+            };
+
+            var columns = new List<(string Template, Dictionary<PdfBodyPlaceHolder, string> Placeholders)>
+            {
+                ("Esquerda: {{E}}", new Dictionary<PdfBodyPlaceHolder, string>
+                {
+                    { new PdfBodyPlaceHolder { Key = "{{E}}" }, "Conteúdo" }
+                }),
+                ("Direita: {{D}}", new Dictionary<PdfBodyPlaceHolder, string>
+                {
+                    { new PdfBodyPlaceHolder { Key = "{{D}}" }, "Conteúdo" }
+                })
+            };
+
+            byte[] pdfData = _composer.GeneratePdf(columns, config);
+            File.WriteAllBytes("Test_MC_AFR.pdf", pdfData);
+
+            Assert.NotNull(pdfData);
+            Assert.True(pdfData.Length > 300);
+        }
+
+        // --------------------------------------------------------------------
+        [Fact]
+        public void PdfColumnConfig_DefaultFitMode_ShouldBeProportional()
+        {
+            var colConfig = new PdfColumnConfig();
+
+            Assert.Equal(PdfColumnFitMode.Proportional, colConfig.FitMode);
+        }
+
+        // --------------------------------------------------------------------
+        [Fact]
+        public void PdfColumnConfig_AutoFit_ShouldPreserveRatiosAndGap()
+        {
+            var colConfig = new PdfColumnConfig
+            {
+                Count = 3,
+                Ratios = new[] { 40f, 30f, 30f },
+                Gap = 12,
+                FitMode = PdfColumnFitMode.AutoFit
+            };
+
+            Assert.Equal(3, colConfig.Count);
+            Assert.Equal(new[] { 40f, 30f, 30f }, colConfig.Ratios);
+            Assert.Equal(12, colConfig.Gap);
+            Assert.Equal(PdfColumnFitMode.AutoFit, colConfig.FitMode);
+        }
     }
 }

@@ -1,3 +1,4 @@
+using QuestPDF.Drawing.Exceptions;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
@@ -20,6 +21,25 @@ namespace Rochas.PDFGenerator.Core
         private readonly DateTime _created;
 
         private readonly PdfBodyStyler _styler;
+        private bool _autoFitFallback;
+
+        public byte[] GeneratePdf()
+        {
+            try
+            {
+                return QuestPDF.Fluent.GenerateExtensions.GeneratePdf(this);
+            }
+            catch (DocumentLayoutException)
+            {
+                if (_config.Columns?.FitMode == PdfColumnFitMode.AutoFit && !_autoFitFallback)
+                {
+                    _autoFitFallback = true;
+                    return QuestPDF.Fluent.GenerateExtensions.GeneratePdf(this);
+                }
+
+                throw;
+            }
+        }
 
         public PdfMultiColumnDocument(
             List<(string Template, Dictionary<PdfBodyPlaceHolder, string> Placeholders)> columns,
@@ -95,21 +115,32 @@ namespace Rochas.PDFGenerator.Core
                     content.Row(row =>
                     {
                         var colConfig = _config.Columns;
-                        float[] ratios = colConfig?.Ratios ?? GenerateDefaultRatios(_columns.Count);
                         float gap = colConfig?.Gap ?? 10;
 
                         for (int i = 0; i < _columns.Count; i++)
                         {
-                            float ratio = i < ratios.Length ? ratios[i] : 100f / _columns.Count;
-
                             if (i > 0)
                                 row.ConstantItem(gap).Text("");
 
                             var colData = _columns[i];
-                            row.RelativeItem((int)ratio).Column(col =>
+
+                            if (colConfig?.FitMode == PdfColumnFitMode.AutoFit && !_autoFitFallback)
                             {
-                                RenderColumnContent(col, colData.Template, colData.Placeholders);
-                            });
+                                row.AutoItem().Column(col =>
+                                {
+                                    RenderColumnContent(col, colData.Template, colData.Placeholders);
+                                });
+                            }
+                            else
+                            {
+                                float[] ratios = colConfig?.Ratios ?? GenerateDefaultRatios(_columns.Count);
+                                float ratio = i < ratios.Length ? ratios[i] : 100f / _columns.Count;
+
+                                row.RelativeItem((int)ratio).Column(col =>
+                                {
+                                    RenderColumnContent(col, colData.Template, colData.Placeholders);
+                                });
+                            }
                         }
                     });
                 });

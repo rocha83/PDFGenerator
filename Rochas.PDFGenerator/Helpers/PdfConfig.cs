@@ -56,6 +56,13 @@ namespace Rochas.PDFGenerator.Helpers
         public float Gap { get; set; } = 10;
         public PdfColumnDividerStyle DividerStyle { get; set; } = PdfColumnDividerStyle.None;
         public string? DividerColor { get; set; }
+        public PdfColumnFitMode FitMode { get; set; } = PdfColumnFitMode.Proportional;
+    }
+
+    public enum PdfColumnFitMode
+    {
+        Proportional,
+        AutoFit
     }
 
     public class PdfChartConfig
