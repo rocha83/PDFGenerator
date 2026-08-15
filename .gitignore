@@ -9,3 +9,7 @@
 /Rochas.PDFGenerator/bin/Debug
 /Rochas.PDFTests/bin
 /Rochas.PDFTests/obj
+
+# Test artifacts
+/Rochas.PDFTests/TestResults
+*.nupkg

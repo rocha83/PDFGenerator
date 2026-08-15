@@ -1,6 +1,6 @@
 # Rochas.PDFGenerator
 
-[English](#english) | [Português](#português) | [Español](#español) | [Deutsch](#deutsch) | [Français](#français)
+[English](#english) | [Português](#português) | [Español](#español) | [Français](#français) | [Deutsch](#deutsch)
 
 ---
 
@@ -487,165 +487,6 @@ byte[] pdf = composer.GeneratePdf(table, headerModel, tableConfig, config);
 ### Licencia
 
 GPL v2 — libre para uso comercial y personal.
-## Deutsch
-
-**.NET-Bibliothek zum Erzeugen von PDFs aus Vorlagen, Modellen (T) oder DataTables** – mit vollständiger Unterstützung für **Kopfzeilen mit Logo**, **Seitennummern in der Fußzeile**, **Schriftstile und -farben**, **Wasserzeichen**, **formatierte Tabellen**, **mehrspaltige Layouts** und hochgradig anpassbare Platzhalter.
-
-Basiert auf *QuestPDF* und ist mit **.NET Standard 2.1+** kompatibel.
-
-Wichtigste Funktionen:
-- **Vorlagen-/benutzerdefinierte Inhaltskomposition** — Inline-Vorlagen mit `{{Placeholder}}`-Schlüsseln und individuellen Platzhalterstilen
-- **Eingebettete Schriftarten** — Liberation Sans, Comic Neue, JetBrains Mono, Montserrat, Liberation Serif oder benutzerdefinierte Schriftarten
-- **Formatierung und Textausrichtung** — fett, kursiv, unterstrichen, Schriftgröße und -farbe pro Platzhalter
-- **Mehrspaltiges und Tabellenformat** — Spalten nebeneinander mit konfigurierbaren Verhältnissen und formatierte Tabellendaten
-
-### Installation
-
-```bash
-dotnet add package Rochas.PDFGenerator
-```
-
-### Überblick
-
-Die Hauptklasse ist `PDFComposer` und bietet **7 Modi** zur PDF-Erzeugung:
-
-| Modus | Beschreibung |
-|-------|--------------|
-| **Vorlage + Platzhalter** | Ersetzt Schlüssel `{{Name}}` mit individuellen Stilen |
-| **Generisches Modell (T)** | Objekt wird automatisch auf Platzhalter abgebildet |
-| **DataTable** | Tabellarisches PDF mit Kopfzeilen/Zeilen |
-| **Mehrspaltig** | Zwei Vorlagen nebeneinander mit konfigurierbaren Verhältnissen |
-| **Mehrspaltige Liste** | N Spalten über eine Vorlagenliste |
-| **Formatierte Tabelle** | DataTable mit Rändern, wechselnden Zeilen, benutzerdefinierter Kopfzeile |
-| **Tabelle + Modell-Kopfzeile** | Objekt-Kopfzeile + Tabelle mit Einträgen |
-
-### Konfiguration (PdfConfig)
-
-Die Klasse `PdfConfig` bündelt alle Einstellungen:
-
-```csharp
-var config = new PdfConfig
-{
-    MarginLeft = 40,
-    MarginRight = 40,
-    MarginTop = 50,
-    MarginBottom = 50,
-
-    FontFamily = PdfFontFamily.Montserrat,
-    CustomFontBytes = File.ReadAllBytes("fonts/Montserrat-Regular.ttf"),
-
-    Header = new PdfHeaderConfig
-    {
-        LogoBytes = File.ReadAllBytes("images/logo.png"),
-        LogoAlign = PdfLogoAlignment.Left,
-        Title = "Report Title"
-    },
-
-    WatermarkBytes = File.ReadAllBytes("images/watermark.png"),
-    WatermarkOpacity = 30,
-    FooterPagination = true
-};
-```
-
-> **Abwärtskompatibel:** `PdfPageConfiguration` und `PdfHeaderComposition` funktionieren weiterhin als Aliase.
-
-Der Konstruktor von `PDFComposer` akzeptiert zusätzlich die Dokument-Metadaten `author`, `title`, `subject` und `creationDate`.
-
-### Modus 1 — Vorlage + Platzhalter (Schnellstart)
-
-```csharp
-var composer = new PDFComposer();
-var template = "Client: {{Name}}\nDate: {{Date}}";
-
-var placeholders = new Dictionary<PdfBodyPlaceHolder, string>
-{
-    { new PdfBodyPlaceHolder { Key = "{{Name}}", Style = new PdfPlaceHolderStyle { Bold = true, FontSizePx = 16 } }, "ACME Ltd" },
-    { new PdfBodyPlaceHolder { Key = "{{Date}}", Style = new PdfPlaceHolderStyle { Italic = true } }, DateTime.Now.ToString("dd/MM/yyyy") }
-};
-
-byte[] pdf = composer.GeneratePdf(template, placeholders, config);
-```
-
-### Modi 2 und 3 — Generisches Modell (T) und DataTable
-
-```csharp
-var client = new { Name = "ACME Ltd", Document = "00.000.000/0001-00" };
-byte[] pdf = composer.GeneratePdf("Client: {{Name}}\nDoc: {{Document}}", client, config);
-
-DataTable table = new DataTable();
-table.Columns.Add("Product");
-table.Columns.Add("Quantity");
-table.Rows.Add("Notebook", 10);
-byte[] pdf = composer.GeneratePdf(table, config);
-```
-
-### Modi 4 und 5 — Mehrspaltig (2 oder N Spalten)
-
-```csharp
-config.Columns = new PdfColumnConfig { Count = 2, Ratios = new[] { 60f, 40f }, Gap = 10 };
-
-var leftPlaceholders = new Dictionary<PdfBodyPlaceHolder, string>
-{
-    { new PdfBodyPlaceHolder { Key = "{{Name}}" }, "ACME Ltd" },
-    { new PdfBodyPlaceHolder { Key = "{{Doc}}" }, "00.000.000/0001-00" }
-};
-
-var rightPlaceholders = new Dictionary<PdfBodyPlaceHolder, string>
-{
-    { new PdfBodyPlaceHolder { Key = "{{Date}}" }, "08/07/2026" },
-    { new PdfBodyPlaceHolder { Key = "{{Total}}" }, "$1,500.00" }
-};
-
-byte[] pdf = composer.GeneratePdf(
-    "Name: {{Name}}\nDoc: {{Doc}}", leftPlaceholders,
-    "Date: {{Date}}\nTotal: {{Total}}", rightPlaceholders,
-    config);
-
-// N Spalten über eine Liste von (template, placeholders)-Tupeln
-var columns = new List<(string Template, Dictionary<PdfBodyPlaceHolder, string> Placeholders)>
-{
-    ("Name: {{Name}}\nDoc: {{Doc}}", leftPlaceholders),
-    ("Date: {{Date}}\nOrder: {{Order}}", centerPlaceholders),
-    ("Total: {{Total}}\nStatus: {{Status}}", rightPlaceholders)
-};
-
-byte[] pdf = composer.GeneratePdf(columns, config);
-```
-
-### Modi 6 und 7 — Formatierte Tabellen
-
-```csharp
-config.Table = new PdfTableConfig
-{
-    Style = PdfTableStyle.Bordered,   // Bordered | Striped | Minimal | Grid
-    HeaderColor = "#1E3A5F",
-    HeaderTextBold = true,
-    AlternatingRowColor = "#F0F4F8",
-    FontSize = 10,
-    RowPadding = 5
-};
-
-DataTable table = new DataTable();
-table.Columns.Add("Product");
-table.Columns.Add("Qty");
-table.Columns.Add("Value");
-table.Rows.Add("Notebook", 2, "$12,000.00");
-
-byte[] pdf = composer.GeneratePdf(table, config);
-
-var headerModel = new { Client = "ACME Ltd", CNPJ = "00.000.000/0001-00", Date = "08/07/2026" };
-var tableConfig = new PdfTableConfig
-{
-    Style = PdfTableStyle.Bordered,
-    HeaderColor = "#1E3A5F"
-};
-
-byte[] pdf = composer.GeneratePdf(table, headerModel, tableConfig, config);
-```
-
-### Lizenz
-
-GPL v2 — frei für kommerzielle und private Nutzung.
 ## Français
 
 **Bibliothèque .NET pour générer des PDF à partir de modèles, de modèles (T) ou de DataTables**, avec prise en charge complète des **en-têtes avec logo**, de la **pagination en pied de page**, des **styles et couleurs de police**, des **filigranes**, des **tableaux stylisés**, des **dispositions multi-colonnes** et de placeholders hautement personnalisables.
@@ -805,3 +646,162 @@ byte[] pdf = composer.GeneratePdf(table, headerModel, tableConfig, config);
 ### Licence
 
 GPL v2 — libre pour un usage commercial et personnel.
+## Deutsch
+
+**.NET-Bibliothek zum Erzeugen von PDFs aus Vorlagen, Modellen (T) oder DataTables** – mit vollständiger Unterstützung für **Kopfzeilen mit Logo**, **Seitennummern in der Fußzeile**, **Schriftstile und -farben**, **Wasserzeichen**, **formatierte Tabellen**, **mehrspaltige Layouts** und hochgradig anpassbare Platzhalter.
+
+Basiert auf *QuestPDF* und ist mit **.NET Standard 2.1+** kompatibel.
+
+Wichtigste Funktionen:
+- **Vorlagen-/benutzerdefinierte Inhaltskomposition** — Inline-Vorlagen mit `{{Placeholder}}`-Schlüsseln und individuellen Platzhalterstilen
+- **Eingebettete Schriftarten** — Liberation Sans, Comic Neue, JetBrains Mono, Montserrat, Liberation Serif oder benutzerdefinierte Schriftarten
+- **Formatierung und Textausrichtung** — fett, kursiv, unterstrichen, Schriftgröße und -farbe pro Platzhalter
+- **Mehrspaltiges und Tabellenformat** — Spalten nebeneinander mit konfigurierbaren Verhältnissen und formatierte Tabellendaten
+
+### Installation
+
+```bash
+dotnet add package Rochas.PDFGenerator
+```
+
+### Überblick
+
+Die Hauptklasse ist `PDFComposer` und bietet **7 Modi** zur PDF-Erzeugung:
+
+| Modus | Beschreibung |
+|-------|--------------|
+| **Vorlage + Platzhalter** | Ersetzt Schlüssel `{{Name}}` mit individuellen Stilen |
+| **Generisches Modell (T)** | Objekt wird automatisch auf Platzhalter abgebildet |
+| **DataTable** | Tabellarisches PDF mit Kopfzeilen/Zeilen |
+| **Mehrspaltig** | Zwei Vorlagen nebeneinander mit konfigurierbaren Verhältnissen |
+| **Mehrspaltige Liste** | N Spalten über eine Vorlagenliste |
+| **Formatierte Tabelle** | DataTable mit Rändern, wechselnden Zeilen, benutzerdefinierter Kopfzeile |
+| **Tabelle + Modell-Kopfzeile** | Objekt-Kopfzeile + Tabelle mit Einträgen |
+
+### Konfiguration (PdfConfig)
+
+Die Klasse `PdfConfig` bündelt alle Einstellungen:
+
+```csharp
+var config = new PdfConfig
+{
+    MarginLeft = 40,
+    MarginRight = 40,
+    MarginTop = 50,
+    MarginBottom = 50,
+
+    FontFamily = PdfFontFamily.Montserrat,
+    CustomFontBytes = File.ReadAllBytes("fonts/Montserrat-Regular.ttf"),
+
+    Header = new PdfHeaderConfig
+    {
+        LogoBytes = File.ReadAllBytes("images/logo.png"),
+        LogoAlign = PdfLogoAlignment.Left,
+        Title = "Report Title"
+    },
+
+    WatermarkBytes = File.ReadAllBytes("images/watermark.png"),
+    WatermarkOpacity = 30,
+    FooterPagination = true
+};
+```
+
+> **Abwärtskompatibel:** `PdfPageConfiguration` und `PdfHeaderComposition` funktionieren weiterhin als Aliase.
+
+Der Konstruktor von `PDFComposer` akzeptiert zusätzlich die Dokument-Metadaten `author`, `title`, `subject` und `creationDate`.
+
+### Modus 1 — Vorlage + Platzhalter (Schnellstart)
+
+```csharp
+var composer = new PDFComposer();
+var template = "Client: {{Name}}\nDate: {{Date}}";
+
+var placeholders = new Dictionary<PdfBodyPlaceHolder, string>
+{
+    { new PdfBodyPlaceHolder { Key = "{{Name}}", Style = new PdfPlaceHolderStyle { Bold = true, FontSizePx = 16 } }, "ACME Ltd" },
+    { new PdfBodyPlaceHolder { Key = "{{Date}}", Style = new PdfPlaceHolderStyle { Italic = true } }, DateTime.Now.ToString("dd/MM/yyyy") }
+};
+
+byte[] pdf = composer.GeneratePdf(template, placeholders, config);
+```
+
+### Modi 2 und 3 — Generisches Modell (T) und DataTable
+
+```csharp
+var client = new { Name = "ACME Ltd", Document = "00.000.000/0001-00" };
+byte[] pdf = composer.GeneratePdf("Client: {{Name}}\nDoc: {{Document}}", client, config);
+
+DataTable table = new DataTable();
+table.Columns.Add("Product");
+table.Columns.Add("Quantity");
+table.Rows.Add("Notebook", 10);
+byte[] pdf = composer.GeneratePdf(table, config);
+```
+
+### Modi 4 und 5 — Mehrspaltig (2 oder N Spalten)
+
+```csharp
+config.Columns = new PdfColumnConfig { Count = 2, Ratios = new[] { 60f, 40f }, Gap = 10 };
+
+var leftPlaceholders = new Dictionary<PdfBodyPlaceHolder, string>
+{
+    { new PdfBodyPlaceHolder { Key = "{{Name}}" }, "ACME Ltd" },
+    { new PdfBodyPlaceHolder { Key = "{{Doc}}" }, "00.000.000/0001-00" }
+};
+
+var rightPlaceholders = new Dictionary<PdfBodyPlaceHolder, string>
+{
+    { new PdfBodyPlaceHolder { Key = "{{Date}}" }, "08/07/2026" },
+    { new PdfBodyPlaceHolder { Key = "{{Total}}" }, "$1,500.00" }
+};
+
+byte[] pdf = composer.GeneratePdf(
+    "Name: {{Name}}\nDoc: {{Doc}}", leftPlaceholders,
+    "Date: {{Date}}\nTotal: {{Total}}", rightPlaceholders,
+    config);
+
+// N Spalten über eine Liste von (template, placeholders)-Tupeln
+var columns = new List<(string Template, Dictionary<PdfBodyPlaceHolder, string> Placeholders)>
+{
+    ("Name: {{Name}}\nDoc: {{Doc}}", leftPlaceholders),
+    ("Date: {{Date}}\nOrder: {{Order}}", centerPlaceholders),
+    ("Total: {{Total}}\nStatus: {{Status}}", rightPlaceholders)
+};
+
+byte[] pdf = composer.GeneratePdf(columns, config);
+```
+
+### Modi 6 und 7 — Formatierte Tabellen
+
+```csharp
+config.Table = new PdfTableConfig
+{
+    Style = PdfTableStyle.Bordered,   // Bordered | Striped | Minimal | Grid
+    HeaderColor = "#1E3A5F",
+    HeaderTextBold = true,
+    AlternatingRowColor = "#F0F4F8",
+    FontSize = 10,
+    RowPadding = 5
+};
+
+DataTable table = new DataTable();
+table.Columns.Add("Product");
+table.Columns.Add("Qty");
+table.Columns.Add("Value");
+table.Rows.Add("Notebook", 2, "$12,000.00");
+
+byte[] pdf = composer.GeneratePdf(table, config);
+
+var headerModel = new { Client = "ACME Ltd", CNPJ = "00.000.000/0001-00", Date = "08/07/2026" };
+var tableConfig = new PdfTableConfig
+{
+    Style = PdfTableStyle.Bordered,
+    HeaderColor = "#1E3A5F"
+};
+
+byte[] pdf = composer.GeneratePdf(table, headerModel, tableConfig, config);
+```
+
+### Lizenz
+
+GPL v2 — frei für kommerzielle und private Nutzung.
